@@ -1,0 +1,38 @@
+{
+  "name": "genkinflair",
+  "version": "1.0.0",
+  "description": "api for genkin store",
+  "main": "app.js",
+  "scripts": {
+    "start": "nodemon app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/github.com/the_sir_taylor.git"
+  },
+  "keywords": [
+    "fashion",
+    "shopping"
+  ],
+  "author": "oo ajayi",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/github.com/the_sir_taylor/issues"
+  },
+  "homepage": "https://github.com/github.com/the_sir_taylor#readme",
+  "dependencies": {
+    "@sendgrid/mail": "^6.4.0",
+    "bcrypt": "^3.0.7",
+    "bcryptjs": "^2.4.3",
+    "body-parser": "^1.19.0",
+    "express": "^4.17.1",
+    "method-override": "^3.0.0",
+    "mongoose": "^5.8.3",
+    "morgan": "^1.9.1",
+    "nodemailer": "^6.4.2"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.2"
+  }
+}

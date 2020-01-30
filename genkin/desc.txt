@@ -1,0 +1,3 @@
+controller => business logic_ 
+model => database schema and model details
+server => server.js and configuration.js files

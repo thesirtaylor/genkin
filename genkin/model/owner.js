@@ -17,6 +17,7 @@ var ownerModelSchema = new Schema({
     fullname: {type:String},
     isVerified: {type: Boolean, default: false},
     phone_number: {type: Number},
+    createdAt: {type: Date, required: true, default: Date.now}
 });
 var ownertokenModelSchema = new Schema({
     _ownerId: {type: Schema.Types.ObjectId, required: true, ref: 'owner'},

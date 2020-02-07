@@ -20,7 +20,7 @@ module.exports = function(app){
 
     /* Owner Routes */
     router.post('/owner/signup', owner.signup);
-    router.post('/owner/wv', owner.verificationtoken);
+    router.post('/owner/ov', owner.verificationtoken);
     router.post('/owner/rvt', owner.resendverificationtoken);
     router.post('/owner/signin', owner.signin);
     router.post('/owner/prt', owner.passwordresettoken);

@@ -15,7 +15,10 @@ var Owner = require('../model/owner').owner,
     sgMail = require('@sendgrid/mail'),
     bcrypt = require('bcryptjs'),
     SALT_WORK_FACTOR = 10,
-    crypto = require('crypto');
+    crypto = require('crypto'),
+    jwt = require('jsonwebtoken'),
+    jwtsecret = require('../commons/jwtconfig').secret,
+    jwtchecktoken = require('../commons/jwt').checkToken;
 
 
     module.exports = {
@@ -291,9 +294,22 @@ var Owner = require('../model/owner').owner,
                                             .status(401)
                                             .json(ERR('Your Account has not been Verified.'))
                                     }
-                                    return res
-                                        .status(200)
-                                        .json(ERR('Sign in successful'));
+                                    jwt.sign({user: user.email}, jwtsecret, { expiresIn: '4h'}, (err, jtoken)=>{
+                                        if(err){
+                                            return res 
+                                                .status(400)
+                                                .json(ERR('Error while attempting to sign token'));
+                                        }
+                                        if(!jtoken){
+                                            return res
+                                                .status(400)
+                                                .json(ERR('No token signed'))
+                                        }else{
+                                            return res
+                                                .status(200)
+                                                .json(SUCCESS(jtoken));
+                                        }
+                                    })
                                 }
                             }
                         })
@@ -343,8 +359,7 @@ var Owner = require('../model/owner').owner,
                             }
                             sgMail.send(mail, (error)=>{
                                 if(error){
-                                    console.log('there\'s a problem in mail sending');
-                                    return res
+                                   return res
                                         .status(401)
                                         .json(ERR('there\'s a problem in mail sending'));
                                 }
@@ -415,4 +430,59 @@ var Owner = require('../model/owner').owner,
                 }
             })
         },
+        /*
+---------------------------------THESE ENDPOINTS REQUIRE OWNER SIGNED IN-----------------------------------
+        */
+        deletestaff:(req, res)=>{
+            let payload = req.decoded;
+            if(payload.isAdmin === true){
+                Owner.findOne({username: req.body.username},(err, staff)=>{
+                    if(err){
+                        return res
+                            .status(400)
+                            .json(ERR('Problem encountered while trying to find user'));
+                    };
+                    if(!staff){
+                        return res
+                            .status(400)
+                            .json(ERR('There is not staff with this Username'));
+                    }else{
+                        if(staff){
+                            staff.remove(err=>{
+                                if(err){
+                                    return res
+                                        .status(400)
+                                        .json(ERR('Unable to remove staff account'))
+                                }else{    
+                                    sgMail.setApiKey('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');
+                                     var mail = {
+                                         from: 'administrator@genkins.com',
+                                         to: staff.email,
+                                         subject: 'Staff Relieve Notification',
+                                         text: 'Hello, '+ req.body.username+ '\n\n' + 'This is to officially inform you that you have been officially relieved of your official duties at Genkins.'+'\n\n'+ 'Thanks, Management.',
+                                     }
+                                    sgMail.send(mail, (error)=>{
+                                        if(error){
+                                             return res
+                                                .status(401)
+                                                .json(ERR('there\'s a problem in mail sending'));
+                                        }
+                                            res
+                                             .status(200)
+                                             .json(SUCCESS(req.body.username + ' has been relieved of official duties and staff relieve mail has been sent to their mail ' + req.body.email));
+                                    })
+                                }                           
+                            })
+                        }
+                    }
+                })
+            }else{
+                return res
+                    .status(400)
+                    .json(ERR('Only the Administator can relieve staff of duty.'))
+            }
+        },
+        uploadproduct:()=>{
+
+        }
     }

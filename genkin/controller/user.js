@@ -16,7 +16,10 @@ var User = require('../model/user').user,
     sgMail = require('@sendgrid/mail'),
     bcrypt = require('bcryptjs'),
     SALT_WORK_FACTOR = 10,
-    crypto = require('crypto');
+    crypto = require('crypto'),
+    jwt = require('jsonwebtoken'),
+    jwtsecret = require('../commons/jwtconfig').secret,
+    jwtchecktoken = require('../commons/jwt').checkToken;
 
 
     module.exports = {
@@ -33,10 +36,7 @@ var User = require('../model/user').user,
                         .json(ERR('something went wrong'));
                  }//else if no error
                  else{
-                if(data && Object.keys(data).length>0){//check if data alrady exits in the collection
-                    console.log(req.body.email);
-                    console.log(data);
-                    console.log('email in use');
+                if(data && Object .keys(data).length>0){//check if data alrady exits in the collection
                        return res
                         .status(500)
                         .json(ERR('You already signed up, reset password if forgotten'));
@@ -193,43 +193,53 @@ var User = require('../model/user').user,
             })
         },
         signin:(req, res)=>{
-            User.findOne({email: req.body.email}, (error, data)=>{
+            User.findOne({email: req.body.email}, (error, user)=>{
                 if(error){
                     return res
                         .status(401)
                         .json(ERR('Error encountered while fetching user email'))
                 }
-                if(!data){
+                if(!user){
                     return res
                         .status(401)
                         .json(ERR('This email address ' + req.body.email + ' is not associated with any account. Re-type your email address and try again.'))
                 }
                 else{
-                    if(data && Object.keys(data).length>0){
-                       bcrypt.compare(req.body.password, data.password, (error, isMatch)=>{
+                    if(user && Object.keys(user).length>0){
+                       bcrypt.compare(req.body.password, user.password, (error, isMatch)=>{
                             if(error){
-                                console.log('Error encountered while comparing password and hash');
                                 return res
                                     .status(401)
                                     .json(ERR('Error encountered while comparing password and hash'));
                             }
                             if(!isMatch){
-                                console.log('Password doesn\'t match with the hash in db');
                                 return res
                                     .status(400)
                                     .json(ERR('Password doesn\'t match with the hash in db'));
                             }
                             else{
                                 if(isMatch){
-                                    if(!data.isVerified){
+                                    if(!user.isVerified){
                                         return res
                                             .status(401)
                                             .json(ERR('Your Account has not been Verified.'))
                                     }
-                                    console.log(data.email + ' Logged in');
-                                    return res
-                                        .status(200)
-                                        .json(SUCCESS(data.email + ' Logged in'));
+                                   jwt.sign({user: user.email}, jwtsecret, { expiresIn: '4h'}, (err,jtoken)=>{
+                                       if(err){
+                                           return res
+                                            .status(400)
+                                            .json(ERR('Error while attemting to sign token'));
+                                       }
+                                       if(!jtoken){
+                                           return res
+                                            .status(400)
+                                            .json(ERR('No token signed'))
+                                       }else{
+                                           return res
+                                              .status(200)
+                                              .json(SUCCESS(jtoken));
+                                       }
+                                   })
                                 }
                             }
                         })
@@ -240,48 +250,61 @@ var User = require('../model/user').user,
         passwordresettoken:(req, res)=>{
             User.findOne({email: req.body.email}, (error, data)=>{
                 if(error){
-                    console.log("User does not exist");
                     return res
                         .status(401)
-                        .json(ERR('User does not exist'));
+                        .json(ERR('Error encountered while fetching user '));
                 }
                 if(!data){
-                    console.log("User does not exist.");
                     return res
                         .status(400)
                         .json(ERR('User does not exist.'));
                 }
-                PasswordToken.create({_userId: data._id, passwordResetToken: crypto.randomBytes(16).toString('hex')}, (error, token)=>{
-                    if(error){
-                        console.log('Token creation failed');
-                        return res
-                            .status(401)
-                            .json(ERR('TOken creation failed'))
-                    }else{
+                if(data){
+                    PasswordToken.findOne({_userId: data._id},(error, e)=>{
+                        if(error){
+                            return res
+                                .status(401)
+                                .json(ERR('Error encountered while searching for token'));
+                        }
+                        if(e){
+                            return res
+                                .status(401)
+                                .json(ERR('The last token you requested hasn\'t expired, check your email for it.'))
+                        }
+                        else{
+                            PasswordToken.create({_userId: data._id, passwordResetToken: crypto.randomBytes(16).toString('hex')}, (error, token)=>{
+                                    if(error){
+                                        return res
+                                            .status(401)
+                                            .json(ERR('TOken creation failed'))
+                        }
+                        else{
                         if(token){
                             sgMail.setApiKey('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');  
-                            var mail = { from: 'Password-Reset@genkins.com',
-                                                 to: req.body.email,
-                                                 subject: 'Password Reset Token',
-                                                 text: 'Hello, '+ data.fullname+ '\n\n' + 'You applied to change your password \n\n' +'Activate Password Reset authorization by clicking this link: \nhttp:\/\/' + req.headers.host + '\/confirmation\/' + PasswordToken.passwordResetToken + '.\n'};
+                            var mail = {
+                                 from: 'Password-Reset@genkins.com',
+                                 to: req.body.email,
+                                 subject: 'Password Reset Token',
+                                 text: 'Hello, '+ data.fullname+ '\n\n' + 'You applied to change your password \n\n' +'Activate Password Reset authorization by clicking this link: \nhttp:\/\/' + req.headers.host + '\/confirmation\/' + PasswordToken.passwordResetToken + '.\n'};
                             sgMail.send(mail, (error)=>{
                                 if(error){
-                                    console.log('there\'s a problem in mail sending');
                                     return res
                                         .status(401)
                                         .json(ERR('Mail sending failed'));
-                                };
+                                }
                                 res
-                                .status(200)
-                                .json(SUCCESS('Password reset mail has been sent successfully to ' + req.body.email + '.'))
-                            })
+                                     .status(200)
+                                     .json(SUCCESS('Password reset mail has been sent successfully to ' + req.body.email + '.'))
+                                })
+                            }
                         }
-                    }
-                })
-    
-                
+                    })
+                }
             })
-        },
+        }
+                
+    })
+},
         resetpassword: (req, res)=>{
             PasswordToken.findOne({passwordResetToken: req.body.passwordResetToken}, (error, token)=>{
                 if(error){

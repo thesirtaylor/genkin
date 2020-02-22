@@ -1,8 +1,10 @@
 var express = require('express'),
     router = express.Router(),
-    read = require('../controller/read')
+    read = require('../controller/read'),
+    upload = require('../commons/imageupload'),
     user = require('../controller/user'),
-    owner = require('../controller/owner')
+    owner = require('../controller/owner'),
+    verify = require('../commons/jwt').checkToken
 
 
 module.exports = function(app){
@@ -10,7 +12,7 @@ module.exports = function(app){
     //accounts routes
     router.get('/',read.index);//hello message
 
-    /** User ROutes**/
+    /** User Routes**/
     router.post('/user/signup', user.signup); //signup endpoint
     router.post('/user/uv', user.verificationtoken);//tokenconfirmation endpoint
     router.post('/user/rvt', user.resendverificationtoken);//resendtoken endpoint
@@ -25,5 +27,8 @@ module.exports = function(app){
     router.post('/owner/signin', owner.signin);
     router.post('/owner/prt', owner.passwordresettoken);
     router.post('/owner/rp', owner.resetpassword);
+
+    /*Sign in required*/
+    router.post('/owner/up', upload.array('images', 4), owner.uploadproduct);
     app.use(router);
 }

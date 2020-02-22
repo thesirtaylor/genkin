@@ -2,7 +2,7 @@ var  jwt = require('jsonwebtoken'),
      jwtsecret = require('./jwtconfig').secret
      ERR = require('./errorResponse'),
      SUCCESS = require('./successResponse'),
-
+//middle-ware to check if user is signed in, simply verifies the token signed at signin
  module.exports = {
      checkToken: (req, res, next)=>{
         let token = req.headers['x-access-token'] || req.headers['authorization'];

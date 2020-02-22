@@ -5,13 +5,13 @@ var mongoose = require('mongoose'),
     Schema = mongoose.Schema;
 
 var ProductModelSchema = new Schema({
-    product_id:{type: Number, require: true},
     name: {type: String, require: true},
     desc: {type: String, require: true},
-    quantity: {type: Number, require: true},
+    images: {type: [], require:true},
     price: {type: Number, require: true},
-    fashionCategory: {type: String, require: true},
-    uploadDate: {type: Date}
+    fashioncat: {type: String, require: true},
+    uploadDate: {type: Date, require: true, default: Date.now},
+//    uploadedby: {type: String, require: true}
 });
 
 var product = mongoose.model('product', ProductModelSchema);

@@ -224,7 +224,7 @@ var User = require('../model/user').user,
                                             .status(401)
                                             .json(ERR('Your Account has not been Verified.'))
                                     }
-                                   jwt.sign({user: user.email}, jwtsecret, { expiresIn: '4h'}, (err,jtoken)=>{
+                                   jwt.sign({user: user._id}, jwtsecret, { expiresIn: '4h'}, (err,jtoken)=>{
                                        if(err){
                                            return res
                                             .status(400)

@@ -10,16 +10,18 @@ Controller for owner and staff
 var Owner = require('../model/owner').owner,
     Token = require('../model/owner').ownerverificationtoken,
     PasswordToken = require('../model/owner').ownerpasswordresettoken,
+    Product = require('../model/product').product,
     ERR = require('../commons/errorResponse'),
     SUCCESS = require('../commons/successResponse'),
     sgMail = require('@sendgrid/mail'),
     bcrypt = require('bcryptjs'),
     SALT_WORK_FACTOR = 10,
+    upload = require('../commons/cloudinary'),
+    fs = require('fs'),
     crypto = require('crypto'),
     jwt = require('jsonwebtoken'),
     jwtsecret = require('../commons/jwtconfig').secret,
     jwtchecktoken = require('../commons/jwt').checkToken;
-
 
     module.exports = {
 
@@ -89,7 +91,7 @@ var Owner = require('../model/owner').owner,
                                                                    };
                                                                     //send the email  if no error occur 
                                                                     sgMail.setApiKey('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');  
-                                                                   var mail = { from: 'no-reply@genkins.com',
+                                                                           var mail = { from: 'no-reply@genkins.com',
                                                                                         to: req.body.email,
                                                                                         subject: 'Staff Account Verification Token',
                                                                                         text: 'Hello,\n\n' + 'Please verify your staff account by clicking the link: \nhttp:\/\/' + req.headers.host + '\/confirmation\/' + Token.token + '.\n'};
@@ -262,9 +264,8 @@ var Owner = require('../model/owner').owner,
         signin:(req, res)=>{
             Owner.findOne({$or:[{email: req.body.data}, {username: req.body.data}]}, (error, data)=>{
                 if(error){
-                    console.log('Error encountered while fetching user');
                     return res
-                        .stataus(400)
+                        .status(400)
                         .json(ERR('Error encountered while fetching user email'));
                 }
                 if(!data){
@@ -276,13 +277,11 @@ var Owner = require('../model/owner').owner,
                     if(data && Object.keys(data).length>0){
                         bcrypt.compare(req.body.password, data.password, (error, isMatch)=>{
                             if(error){
-                                console.log('Error encountered while comparing password and hash');
                                 return res
                                     .status(401)
                                     .json(ERR('Error encountered while comparing password and hash'));
                             }
                             if(!isMatch){
-                                console.log('Password doesn\'t match with the hash in db');
                                 return res
                                     .status(400)
                                     .json(ERR('Password doesn\'t match with the hash in db'));
@@ -294,7 +293,7 @@ var Owner = require('../model/owner').owner,
                                             .status(401)
                                             .json(ERR('Your Account has not been Verified.'))
                                     }
-                                    jwt.sign({user: user.email}, jwtsecret, { expiresIn: '4h'}, (err, jtoken)=>{
+                                    jwt.sign({owner: owner._id}, jwtsecret, { expiresIn: '4h'}, (err, jtoken)=>{
                                         if(err){
                                             return res 
                                                 .status(400)
@@ -430,9 +429,9 @@ var Owner = require('../model/owner').owner,
                 }
             })
         },
-        /*
----------------------------------THESE ENDPOINTS REQUIRE OWNER SIGNED IN-----------------------------------
-        */
+       
+//---------------------------------THESE ENDPOINTS REQUIRE OWNER SIGNED IN-----------------------------------
+        
         deletestaff:(req, res)=>{
             let payload = req.decoded;
             if(payload.isAdmin === true){
@@ -482,7 +481,50 @@ var Owner = require('../model/owner').owner,
                     .json(ERR('Only the Administator can relieve staff of duty.'))
             }
         },
-        uploadproduct:()=>{
+        uploadproduct:async (req, res, next)=>{
+            let payload = req.decoded;
+            const files = req.files;
+       //     if(payload.email){
+              try{
+                  let urls = [];
+                  let multiple = async (path) => await upload(path);
+                  for (const file of files){
+                      const {path} = file;
+                      console.log("path", file);
+                 
+                  const newPath = await multiple(path);
+                  urls.push(newPath);
+                  fs.unlinkSync(path);
+                  }
 
-        }
-    }
+              if(urls){
+                Product.create({name: req.body.name, desc: req.body.desc, images: urls, price: req.body.price, fashioncat: req.body.fashion}, (err, product)=>{
+                    if(err){
+                        return res
+                            .status(400)
+                            .json(ERR('Problems experienced while trying to create product'));
+                    }else{
+                        if(!product){
+                            return res
+                                .status(400)
+                                .json(ERR('No product created'))
+                        }
+                        return res
+                            .status(200)
+                            .json(SUCCESS('urls =' + product.images))//+payload.username
+                    }
+                })
+               }
+               if(!urls){
+                   return res
+                    .status(400)
+                    .json(ERR('No urls created for product'))
+               }
+            }
+               catch(e){
+                console.log("err :", e);
+                return next(e);
+               }      
+        //    }
+        },
+ }

@@ -75,7 +75,7 @@ var Owner = require('../model/owner').owner,
                                                                 .status(400)
                                                                 .json(ERR('Error occured while trying to count isAdmin'));  
                                                         }
-                                                        if(data > 0){
+                                                        if(data === 1){
                                                             Owner.create({email: req.body.email, password: req.body.password, username: req.body.username, isAdmin: false}, (error, data)=>{
                                                                 if(error){
                                                                     return res
@@ -518,7 +518,7 @@ var Owner = require('../model/owner').owner,
                if(!urls){
                    return res
                     .status(400)
-                    .json(ERR('No urls created for product'))
+                    .json(ERR('No urls created therefore nothing created or uploaded'))
                }
             }
                catch(e){

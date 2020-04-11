@@ -33,7 +33,7 @@ let filefilter = (req, file, callback)=>{
   if(file.mimetype === 'image/jpeg' || file.mimetype === 'image/jpg' || file.mimetype === 'image/png'){
     callback(null, true)
   } else{
-    cb({message: 'Unsupported file format'}, false)
+    callback({message: 'Unsupported file format'}, false)
   }
 };
 

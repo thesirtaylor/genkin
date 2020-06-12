@@ -6,7 +6,7 @@ the admin owner can delete other owners*/
 //require neccessary requirements
 var mongoose = require('mongoose'),
     Schema = mongoose.Schema,
-    bcrypt = require('bcrypt'),
+    bcrypt = require('bcryptjs'),
     SALT_WORK_FACTOR = 10;
 
 var ownerModelSchema = new Schema({

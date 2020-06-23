@@ -11,7 +11,7 @@ var ProductModelSchema = new Schema({
     price: {type: Number, require: true},
     fashioncat: {type: String, require: true},
     uploadDate: {type: Date, require: true, default: Date.now},
-//    uploadedby: {type: String, require: true}
+    uploadedby: {type: String, require: true}
 });
 
 var product = mongoose.model('product', ProductModelSchema);

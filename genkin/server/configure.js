@@ -21,17 +21,18 @@ module.exports = function(app){
     }));**/
     app.use(bodyParser.json());
     app.use(cors());
-    //app.use(methodOverride());
     //app.use(cookieParser('09178'));
     // Using the extended option tells body-parser to use the qs library to parse the URL-encoded data
     //This allows for things like objects and arrays to be encoded into the URL-encoded forma
     //apart from urlencoded, we can also have json, raw or text, depending on what we need
     app.use(bodyParser.urlencoded({extended:true}));
     app.use(methodOverride());
+    //app.use(methodOverride('X-HTTP-Method-Override')) //if the one above doesn't work for PUT
+    //and other weird HTTP request verbs we use this one
     app.use(allowCrossDomain);//allow cross domain access
 
-    app.use('/public/',express.static(path.join(__dirname,'../public')));
-    //if('development' === app.get('env')){
+    app.use('/public',express.static(path.join(__dirname,'./public')));
+    //if('development' === app.get('env') or use process.env.NODE_ENV === 'development'){
       //  app.use(errorHandler());
     //}
     

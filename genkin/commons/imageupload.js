@@ -42,7 +42,9 @@ let storage = multer.diskStorage({
     callback(null, '')
   },
   filename: function(req, file, callback){
-    callback(null, file.originalname);
+    const date = new Date();
+    const conDate = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}[${date.getHours()}:${date.getMinutes()}]`
+    callback(null, file.originalname + '-' + conDate.toString());
   }
 });
 

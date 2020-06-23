@@ -10,7 +10,7 @@ var express = require('express'),
 module.exports = function(app){
 
     //accounts routes
-    router.get('/',read.index);//hello message
+    router.get('/',verify,read.index);//hello message
 
     /** User Routes**/
     router.post('/user/signup', user.signup); //signup endpoint
@@ -29,6 +29,7 @@ module.exports = function(app){
     router.post('/owner/rp', owner.resetpassword);
 
     /*Sign in required*/
-    router.post('/owner/up', upload.array('images', 4), owner.uploadproduct);
+    router.post('/owner/up', verify,upload.array('images', 4), owner.uploadproduct);
+    router.delete('/owner/ds', verify, owner.deleteworker)
     app.use(router);
 }

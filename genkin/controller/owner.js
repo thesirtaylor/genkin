@@ -16,25 +16,24 @@ var Owner = require('../model/owner').owner,
     sgMail = require('@sendgrid/mail'),
     bcrypt = require('bcryptjs'),
     SALT_WORK_FACTOR = 10,
-    upload = require('../commons/cloudinary'),
+    uploadCloudinary = require('../commons/cloudinary'),
     fs = require('fs'),
     crypto = require('crypto'),
     jwt = require('jsonwebtoken'),
-    jwtsecret = require('../commons/jwtconfig').secret,
-    jwtchecktoken = require('../commons/jwt').checkToken;
+    jwtsecret = require('../commons/jwtconfig').secret
+    var jwtchecktoken = require('../commons/jwt').checkToken;
+    var mailKey = process.env.SGMAIL_APIKEY;
 
     module.exports = {
 
         signup:(req, res)=>{
             Owner.findOne({username: req.body.username}, (error, data)=>{
                 if(error){
-                    console.log('Error encountered while checking username');
                     return res
                         .status(400)
                         .json(ERR('Error encountered while checking username'));
                 }else{
                     if(data){
-                        console.log('Username already in use, try another.');
                         return res
                             .status(400)
                             .json(ERR('Username already in use, try another.'));
@@ -42,13 +41,11 @@ var Owner = require('../model/owner').owner,
                     if (!data){
                         Owner.findOne({email: req.body.email}, (error, data)=>{
                             if(error){
-                                console.log('Error encountered while checking email.');
                                 return res
                                     .status(400)
                                     .json(ERR('Error encountered while checking email'));
                             }else{
                                 if(data){
-                                    console.log('You already signed up, reset password if forgotten.');
                                     return res
                                         .status(400)
                                         .json(ERR('You already signed up, reset password if forgotten.'))
@@ -56,13 +53,11 @@ var Owner = require('../model/owner').owner,
                                 if(!data){
                                     Owner.countDocuments({},(error, count) =>{
                                         if(error){
-                                            console.log('Error occured while trying to count');
                                             return res
                                                 .status(400)
                                                 .json(ERR('Error occured while trying to count'));
                                         }else{
                                             if(count === 6){
-                                                console.log('Maximum staff number reached, talk to the Director or CEO');
                                                 return res
                                                     .status(400)
                                                     .json(ERR('Maximum staff number reached, talk to the Director or CEO'))
@@ -83,21 +78,21 @@ var Owner = require('../model/owner').owner,
                                                                        .json(ERR('Error occured while saving file'))
                                                                 };
                                                                 //if no error occured while trying to save file
-                                                                Token.create({_ownerId: data._id, token: crypto.randomBytes(16).toString('hex')}, (error)=>{
+                                                                Token.create({_ownerId: data._id, token: crypto.randomBytes(16).toString('hex')}, (error, tokkenn)=>{
                                                                    if(error){//if error occur while trying to send mail
                                                                         return res
                                                                            .status(500)
                                                                            .json(ERR('Error in token creation'));
                                                                    };
                                                                     //send the email  if no error occur 
-                                                                    sgMail.setApiKey('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');  
+                                                                    sgMail.setApiKey(mailKey);  
                                                                            var mail = { from: 'no-reply@genkins.com',
                                                                                         to: req.body.email,
                                                                                         subject: 'Staff Account Verification Token',
-                                                                                        text: 'Hello,\n\n' + 'Please verify your staff account by clicking the link: \nhttp:\/\/' + req.headers.host + '\/confirmation\/' + Token.token + '.\n'};
-                                                                   sgMail.send(mail, (error)=>{
+                                                                                        //text: 'Hello,\n\n' + 'Please verify your staff account by clicking the link: \nhttp:\/\/' + req.headers.host + '\/confirmation\/' + Token.token + '.\n'};
+                                                                                        text: tokkenn.token};
+                                                                    sgMail.send(mail, (error)=>{
                                                                        if(error){
-                                                                           console.log('there\'s a problem in mail sending');
                                                                            return res
                                                                                .status(500)
                                                                                .json(ERR('Mail sending failed'));
@@ -117,21 +112,21 @@ var Owner = require('../model/owner').owner,
                                                                            .json(ERR('Error occured while saving file'))
                                                                     };
                                                                     //if no error occured while trying to save file
-                                                                    Token.create({_ownerId: data._id, token: crypto.randomBytes(16).toString('hex')}, (error)=>{
+                                                                    Token.create({_ownerId: data._id, token: crypto.randomBytes(16).toString('hex')}, (error, tokenn)=>{
                                                                        if(error){//if error occur while trying to send mail
                                                                             return res
                                                                                .status(500)
                                                                                .json(ERR('Error in token creation'));
                                                                        };
                                                                         //send the email  if no error occur 
-                                                                        sgMail.setApiKey('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');  
+                                                                        sgMail.setApiKey(mailKey);  
                                                                        var mail = { from: 'no-reply@genkins.com',
                                                                                             to: req.body.email,
                                                                                             subject: 'Administrator Account Verification Token',
-                                                                                            text: 'Hello' + req.body.username +',' + '\n\nPlease verify your admin account by clicking the link: \nhttp:\/\/' + req.headers.host + '\/confirmation\/' + Token.token + '.\n'};
+                                                                                            //text: 'Hello' +' ' + req.body.username +',' + '\n\nPlease verify your admin account by clicking the link: \nhttp:\/\/' + req.headers.host + '\/confirmation\/' + Token.token + '.\n'
+                                                                                            text: tokenn.token};
                                                                        sgMail.send(mail, (error)=>{
                                                                            if(error){
-                                                                               console.log('there\'s a problem in mail sending');
                                                                                return res
                                                                                    .status(500)
                                                                                    .json(ERR('Mail sending failed'));
@@ -186,7 +181,7 @@ var Owner = require('../model/owner').owner,
                                     .status(400)
                                     .json(ERR('Staff has already been verified.'))
                             }
-                            data.isVerified = true;
+                            data.isVerified = true;//verify token if it hasn't
                             data.save((error)=>{
                                 if(error){
                                     return res
@@ -232,18 +227,19 @@ var Owner = require('../model/owner').owner,
                             .status(401)
                             .json(ERR('The last token you requsted hasn\'t expired. Check your email for it.'))
                     }else{
-                    Token.create({_ownerId: data._id, token: crypto.randomBytes(16).toString('hex')}, (error)=>{
+                    Token.create({_ownerId: data._id, token: crypto.randomBytes(16).toString('hex')}, (error, tokken)=>{
                         if(error){
                             return res
                                 .status(400)
                                 .json(ERR('Erro intoken creation'));
                         };
-                        sgMail.setApiKey('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')
+                        sgMail.setApiKey(mailKey)
                         var mail = {from: 'no-reply@genkins.com',
                                     to: req.body.email,
                                     subject: 'Account Verification Token',
-                                    text: 'Hello '+ req.body.username +',\n\n' + 'Please verify your account by clicking the link: \nhttp:\/\/' + req.headers.host + '\/confirmation\/' + Token.token + '.\n'        
-                                                    }
+                                    //text: 'Hello '+ req.body.username +',\n\n' + 'Please verify your account by clicking the link: \nhttp:\/\/' + req.headers.host + '\/confirmation\/' + Token.token + '.\n'        
+                                    text: tokken.token};
+
                         sgMail.send(mail, (error)=>{
                             if(error){
                                 console.log('there\'s a problem in mail sending');
@@ -262,20 +258,20 @@ var Owner = require('../model/owner').owner,
             })
         },
         signin:(req, res)=>{
-            Owner.findOne({$or:[{email: req.body.data}, {username: req.body.data}]}, (error, data)=>{
+            Owner.findOne({$or:[{email: req.body.data}, {username: req.body.data}]}, (error, owner)=>{
                 if(error){
                     return res
                         .status(400)
                         .json(ERR('Error encountered while fetching user email'));
                 }
-                if(!data){
+                if(!owner){
                     return res
                         .status(400)
                         .json(ERR('This sign in parameter is not associated with any account. Check, re-type and try again.'))
                 }
                 else{
-                    if(data && Object.keys(data).length>0){
-                        bcrypt.compare(req.body.password, data.password, (error, isMatch)=>{
+                    if(owner && Object.keys(owner).length>0){
+                        bcrypt.compare(req.body.password, owner.password, (error, isMatch)=>{
                             if(error){
                                 return res
                                     .status(401)
@@ -288,7 +284,7 @@ var Owner = require('../model/owner').owner,
                             }
                             else{
                                 if(isMatch){
-                                    if(!data.isVerified){
+                                    if(!owner.isVerified){
                                         return res
                                             .status(401)
                                             .json(ERR('Your Account has not been Verified.'))
@@ -349,13 +345,13 @@ var Owner = require('../model/owner').owner,
                                       }
                         else{
                         if(token){
-                            sgMail.setApiKey('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');
+                            sgMail.setApiKey(mailKey);
                             var mail = {
                                 from: 'Password-Reset@genkins.com',
                                 to: req.body.email,
                                 subject: 'Password Reset Token',
-                                text: 'Hello, '+ data.username+ '\n\n' + 'You applied to change your password \n\n' +'Activate Password Reset authorization by clicking this link: \nhttp:\/\/' + req.headers.host + '\/confirmation\/' + PasswordToken.passwordResetToken + '.\n',
-                            }
+                                //text: 'Hello, '+ data.username+ '\n\n' + 'You applied to change your password \n\n' +'Activate Password Reset authorization by clicking this link: \nhttp:\/\/' + req.headers.host + '\/confirmation\/' + PasswordToken.passwordResetToken + '.\n',
+                                text: tokken.token};
                             sgMail.send(mail, (error)=>{
                                 if(error){
                                    return res
@@ -428,92 +424,54 @@ var Owner = require('../model/owner').owner,
                     }
                 }
             })
-        },
-       
+        },      
 //---------------------------------THESE ENDPOINTS REQUIRE OWNER SIGNED IN-----------------------------------
-        
-        deletestaff:(req, res)=>{
-            let payload = req.decoded;
-            if(payload.isAdmin === true){
-                Owner.findOne({username: req.body.username},(err, staff)=>{
-                    if(err){
-                        return res
-                            .status(400)
-                            .json(ERR('Problem encountered while trying to find user'));
-                    };
-                    if(!staff){
-                        return res
-                            .status(400)
-                            .json(ERR('There is not staff with this Username'));
-                    }else{
-                        if(staff){
-                            staff.remove(err=>{
-                                if(err){
-                                    return res
-                                        .status(400)
-                                        .json(ERR('Unable to remove staff account'))
-                                }else{    
-                                    sgMail.setApiKey('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');
-                                     var mail = {
-                                         from: 'administrator@genkins.com',
-                                         to: staff.email,
-                                         subject: 'Staff Relieve Notification',
-                                         text: 'Hello, '+ req.body.username+ '\n\n' + 'This is to officially inform you that you have been officially relieved of your official duties at Genkins.'+'\n\n'+ 'Thanks, Management.',
-                                     }
-                                    sgMail.send(mail, (error)=>{
-                                        if(error){
-                                             return res
-                                                .status(401)
-                                                .json(ERR('there\'s a problem in mail sending'));
-                                        }
-                                            res
-                                             .status(200)
-                                             .json(SUCCESS(req.body.username + ' has been relieved of official duties and staff relieve mail has been sent to their mail ' + req.body.email));
-                                    })
-                                }                           
-                            })
-                        }
-                    }
-                })
-            }else{
-                return res
-                    .status(400)
-                    .json(ERR('Only the Administator can relieve staff of duty.'))
-            }
-        },
         uploadproduct:async (req, res, next)=>{
             let payload = req.decoded;
             const files = req.files;
-       //     if(payload.email){
               try{
                   let urls = [];
-                  let multiple = async (path) => await upload(path);
+                  //secure_url is the cloudinary key for the returned image url
+                  let multiple = async (path) => await uploadCloudinary(path);
                   for (const file of files){
                       const {path} = file;
-                      console.log("path", file);
-                 
+                      
                   const newPath = await multiple(path);
                   urls.push(newPath);
-                  fs.unlinkSync(path);
+                  fs.unlinkSync(path); //deletes file from server and just dumps on cloudinary
                   }
 
               if(urls){
-                Product.create({name: req.body.name, desc: req.body.desc, images: urls, price: req.body.price, fashioncat: req.body.fashion}, (err, product)=>{
-                    if(err){
-                        return res
-                            .status(400)
-                            .json(ERR('Problems experienced while trying to create product'));
-                    }else{
-                        if(!product){
+                  Owner.findOne({_id: payload.owner}, (error, staff)=>{
+                      if(error){
                             return res
                                 .status(400)
-                                .json(ERR('No product created'))
-                        }
-                        return res
-                            .status(200)
-                            .json(SUCCESS('urls =' + product.images))//+payload.username
-                    }
-                })
+                                .json("Error encountered while fetching staff's Identity");
+                      }
+                      if(staff){
+                            Product.create({name: req.body.name, desc: req.body.desc, images: urls, price: req.body.price, fashioncat: req.body.fashion, uploadedby: staff.username}, (err, product)=>{
+                                if(err){
+                                    return res
+                                        .status(400)
+                                        .json(ERR('Problems experienced while trying to create product'));
+                                }else{
+                                    if(!product){
+                                        return res
+                                            .status(400)
+                                            .json(ERR('No product created'))
+                                    }
+                                    function spread(x){
+                                        Object.values(x).forEach((ex)=>{
+                                            console.log (ex);
+                                        })
+                                    }
+                                    return res
+                                        .status(200)
+                                        .json(SUCCESS('urls =' + product.images))//+payload.username
+                                }
+                            })
+                      }
+                  })
                }
                if(!urls){
                    return res
@@ -524,7 +482,48 @@ var Owner = require('../model/owner').owner,
                catch(e){
                 console.log("err :", e);
                 return next(e);
-               }      
-        //    }
+               }
         },
+        deleteworker:(req, res) =>{
+            let payload = req.decoded;
+            Owner.findOne({_id:payload.owner}, (error, staff)=>{
+                if (error) {
+                    return res
+                        .status(400)
+                        .json(ERR("Error fetching staff's Identity"))
+                }
+                if(staff && staff.isAdmin === true){
+                    Owner.deleteOne({username: req.body.username},(err, account)=>{
+                            if (err) {
+                                return res
+                                    .status(400)
+                                    .json(ERR("Problem encountered while trying to find staff"))
+                            }
+                            if(account){
+                                sgMail.setApiKey(mailKey);
+                                var mail = {
+                                    from: 'administrator@genkins.com',
+                                    to: staff.email,
+                                    subject: 'Staff Relieve Notification',
+                                    text: 'Hello, '+ req.body.username+ '\n\n' + 'This is to officially inform you that you have been officially relieved of your official duties at Genkins.'+'\n\n'+ 'Thanks, Management.',
+                                };
+                                sgMail.send(mail, (error)=>{
+                                    if(error){
+                                        return res
+                                            .status(401)
+                                            .status(ERR("there's a problem in mail sending"))
+                                    }
+                                        return res
+                                            .status(200)
+                                            .json(SUCCESS(req.body.username + ' has been relieved of official duties and staff relieve mail has been sent to their mail ' + staff.email))
+                                })
+                            }
+                    })
+                } else{
+                    return res
+                        .status(400)
+                        .json(ERR('Only the Administator can relieve staff of duty.'));
+                }
+            })
+        }
  }

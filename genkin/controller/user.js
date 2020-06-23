@@ -18,8 +18,9 @@ var User = require('../model/user').user,
     SALT_WORK_FACTOR = 10,
     crypto = require('crypto'),
     jwt = require('jsonwebtoken'),
-    jwtsecret = require('../commons/jwtconfig').secret,
-    jwtchecktoken = require('../commons/jwt').checkToken;
+    jwtsecret = require('../commons/jwtconfig').secret
+    var jwtchecktoken = require('../commons/jwt').checkToken;
+    var mailKey = process.env.SGMAIL_APIKEY;
 
 
     module.exports = {
@@ -52,18 +53,19 @@ var User = require('../model/user').user,
                                 .json(ERR('Error occured while saving file'))
                          };
                          //if no error occured while trying to save file
-                         Token.create({_userId: data._id, token: crypto.randomBytes(16).toString('hex')}, (error)=>{
+                         Token.create({_userId: data._id, token: crypto.randomBytes(16).toString('hex')}, (error, tokken)=>{
                             if(error){//if error occur while trying to send mail
                                  return res
                                     .status(500)
                                     .json(ERR('Error in token creation'));
                             };
                              //send the email  if no error occur 
-                             sgMail.setApiKey('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');  
+                             sgMail.setApiKey(mailKey);  
                             var mail = { from: 'no-reply@genkins.com',
                                                  to: req.body.email,
                                                  subject: 'Account Verification Token',
-                                                 text: 'Hello,\n\n' + 'Please verify your account by clicking the link: \nhttp:\/\/' + req.headers.host + '\/confirmation\/' + Token.token + '.\n'};
+                                                 //text: 'Hello,\n\n' + 'Please verify your account by clicking the link: \nhttp:\/\/' + req.headers.host + '\/confirmation\/' + Token.token + '.\n'};
+                                                 text: tokken.token};
                             sgMail.send(mail, (error)=>{
                                 if(error){
                                     console.log('thers a problem in mail sending');
@@ -150,45 +152,46 @@ var User = require('../model/user').user,
                         return res
                             .status(400)
                             .json(ERR('This account has been verified.'));
-                    }
+                         }
                 
-                Token.findOne({_userId: data._id}, (error, e)=>{
-                    if(error){
-                        return res
-                            .status(401)
-                            .json(ERR('Error encountered while searching for token.'))
-                    }
-                    if(e){
-                        return res
-                            .status(401)
-                            .json(ERR('The last token you requsted hasn\'t expired. Check your email for it.'))
-                    }else{
-                    Token.create({_userId: data._id, token: crypto.randomBytes(16).toString('hex')}, (error)=>{
-                        if(error){//if error occur while trying to send mail
-                             return res
-                                .status(500)
-                                .json(ERR('Error in token creation'));
-                    }; 
-                    //send the email  if no error occur 
-                    sgMail.setApiKey('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');  
-                    var mail = { from: 'no-reply@genkins.com',
-                                         to: req.body.email,
-                                         subject: 'Account Verification Token',
-                                         text: 'Hello,\n\n' + 'Please verify your account by clicking the link: \nhttp:\/\/' + req.headers.host + '\/confirmation\/' + Token.token + '.\n'};
-                    sgMail.send(mail, (error)=>{
-                        if(error){
-                            console.log('thers a problem in mail sending');
-                            return res
-                                .status(500)
-                                .json(ERR('Mail sending failed'));
-                        };
-                        return res
-                            .status(200)
-                            .json(SUCCESS('Verification mail has been sent successfully to ' + req.body.email + '.'))
-                            })  
-                         })
-                       }
-                    })
+                            Token.findOne({_userId: data._id}, (error, e)=>{
+                                if(error){
+                                    return res
+                                        .status(401)
+                                        .json(ERR('Error encountered while searching for token.'))
+                                }
+                                if(e){
+                                    return res
+                                        .status(401)
+                                        .json(ERR('The last token you requsted hasn\'t expired. Check your email for it.'))
+                                }else{
+                                Token.create({_userId: data._id, token: crypto.randomBytes(16).toString('hex')}, (error, tokken)=>{
+                                    if(error){//if error occur while trying to send mail
+                                        return res
+                                            .status(500)
+                                            .json(ERR('Error in token creation'));
+                                }; 
+                                //send the email  if no error occur 
+                                sgMail.setApiKey(mailKey);  
+                                var mail = { from: 'no-reply@genkins.com',
+                                                    to: req.body.email,
+                                                    subject: 'Account Verification Token',
+                                                    //text: 'Hello,\n\n' + 'Please verify your account by clicking the link: \nhttp:\/\/' + req.headers.host + '\/confirmation\/' + Token.token + '.\n'};
+                                                    text: tokken.token};
+                                sgMail.send(mail, (error)=>{
+                                    if(error){
+                                        console.log('there is a problem in mail sending');
+                                        return res
+                                            .status(500)
+                                            .json(ERR('Mail sending failed'));
+                                    };
+                                    return res
+                                        .status(200)
+                                        .json(SUCCESS('Verification mail has been sent successfully to ' + req.body.email + '.'))
+                                        })  
+                                    })
+                                }
+                                })
                 }
             })
         },
@@ -272,7 +275,7 @@ var User = require('../model/user').user,
                                 .json(ERR('The last token you requested hasn\'t expired, check your email for it.'))
                         }
                         else{
-                            PasswordToken.create({_userId: data._id, passwordResetToken: crypto.randomBytes(16).toString('hex')}, (error, token)=>{
+                            PasswordToken.create({_userId: data._id, passwordResetToken: crypto.randomBytes(16).toString('hex')}, (error, tokken)=>{
                                     if(error){
                                         return res
                                             .status(401)
@@ -280,12 +283,13 @@ var User = require('../model/user').user,
                         }
                         else{
                         if(token){
-                            sgMail.setApiKey('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');  
+                            sgMail.setApiKey(mailKey);  
                             var mail = {
                                  from: 'Password-Reset@genkins.com',
                                  to: req.body.email,
                                  subject: 'Password Reset Token',
-                                 text: 'Hello, '+ data.fullname+ '\n\n' + 'You applied to change your password \n\n' +'Activate Password Reset authorization by clicking this link: \nhttp:\/\/' + req.headers.host + '\/confirmation\/' + PasswordToken.passwordResetToken + '.\n'};
+                                 //text: 'Hello, '+ data.fullname+ '\n\n' + 'You applied to change your password \n\n' +'Activate Password Reset authorization by clicking this link: \nhttp:\/\/' + req.headers.host + '\/confirmation\/' + PasswordToken.passwordResetToken + '.\n'};
+                                 text: tokken.token};
                             sgMail.send(mail, (error)=>{
                                 if(error){
                                     return res

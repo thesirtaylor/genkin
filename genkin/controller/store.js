@@ -17,7 +17,7 @@ var Owner = require('../model/owner').owner,
  * to workers
  **/
     module.exports = {
-        create: async (req, res)=>{
+        create: (req, res)=>{
 
             let payload = req.decoded;
             Owner.findOne({_id: payload.owner}, (error, staff)=>{

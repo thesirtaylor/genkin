@@ -7,11 +7,12 @@ var mongoose = require('mongoose'),
 var ProductModelSchema = new Schema({
     name: {type: String, require: true},
     desc: {type: String, require: true},
-    images: {type: [], require:true},
+    images: {type: Array, require:true},
     price: {type: Number, require: true},
-    fashioncat: {type: String, require: true},
+    category: {type: String, require: true},
+    store: {type: Schema.Types.ObjectId, required: true, ref: 'owner'},
     uploadDate: {type: Date, require: true, default: Date.now},
-    uploadedby: {type: String, require: true}
+    uploadedby: {type: String, require: true},
 });
 
 var product = mongoose.model('product', ProductModelSchema);

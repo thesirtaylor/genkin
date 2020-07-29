@@ -14,7 +14,6 @@ var userModelSchema = new Schema({
     email: {type: String, required: true, index: {unique: true}},
     password: {type:String, required: true},
     fullname: {type: String},
-    delivery_address: {type: String},
     isVerified: {type: Boolean, default: false},
     phone_number: {type: Number},
 
@@ -26,7 +25,7 @@ var tokenModelSchema = new Schema({
 });
 var passwordResetSchema = new Schema({
     _userId: {type: Schema.Types.ObjectId, required: true, ref: 'user'},
-    passwordResetToken: {type: String},
+    token: {type: String, required: true},
     passwordResetExpires: {type: Date, required: true, default: Date.now, expires: 43200}
 });
 

@@ -25,8 +25,8 @@ var ownertokenModelSchema = new Schema({
     createdAt: {type: Date, required: true, default: Date.now, expires: 43200}
 });
 var passwordResetSchema = new Schema({
-    _ownerId: {type: Schema.Types.ObjectId, required: true, ref: 'user'},
-    passwordResetToken: {type: String},
+    _ownerId: {type: Schema.Types.ObjectId, required: true, ref: 'owner'},
+    token: {type: String, required: true},
     passwordResetExpires: {type: Date, required: true, default: Date.now, expires: 43200}
 });
 ownerModelSchema.pre('save', function(next){
@@ -46,11 +46,32 @@ ownerModelSchema.pre('save', function(next){
 })
 
 
+var storeModelSchema = new Schema({
+    _ownerId: {type: Schema.Types.ObjectId, required: true, ref: 'owner'},
+    name: {type: String, required: true, unique: true},
+    desc: {type: String, required: true},
+    location: { type: String},
+    paymentDetails: {
+        bank:{type: String},
+        account:{type: Number}
+        },
+    workers: [{type: Schema.Types.ObjectId, ref: 'owner'}],
+    createdAt: {type: Date, required: true, default: Date.now},
+    hirekey: {type: Array}
+});
+
+
+
+
+
 //export model module
 var owner = mongoose.model('owner', ownerModelSchema);
 var ownerverificationtoken = mongoose.model('ownerverificationtoken', ownertokenModelSchema);
 var ownerpasswordresettoken = mongoose.model('ownerpasswordresettoken', passwordResetSchema);
+var store = mongoose.model('store', storeModelSchema);
+
 
 module.exports.owner = owner;
 module.exports.ownerverificationtoken = ownerverificationtoken;
 module.exports.ownerpasswordresettoken = ownerpasswordresettoken;
+module.exports.store = store;

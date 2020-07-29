@@ -1,6 +1,6 @@
 /*
 Controller for owner and staff
-> sign up (max 5 accounts)
+> sign up
 > log in 
 > account verification 
 > password reset
@@ -27,129 +27,56 @@ var Owner = require('../model/owner').owner,
     module.exports = {
 
         signup:(req, res)=>{
-            Owner.findOne({username: req.body.username}, (error, data)=>{
+            Owner.findOne({$or:[{username: req.body.username},{email: req.body.email}]}, (error, data)=>{
                 if(error){
                     return res
                         .status(400)
-                        .json(ERR('Error encountered while checking username'));
+                        .json(ERR('Error encountered while checking data'));
                 }else{
-                    if(data){
+                    if(data && Object.keys(data).length>0){
                         return res
                             .status(400)
-                            .json(ERR('Username already in use, try another.'));
+                            .json(ERR('Username or Email already in use, try another.'));
                     }
-                    if (!data){
-                        Owner.findOne({email: req.body.email}, (error, data)=>{
-                            if(error){
-                                return res
-                                    .status(400)
-                                    .json(ERR('Error encountered while checking email'));
-                            }else{
-                                if(data){
+                    if (!data){              
+                                                   
+                            Owner.create({email: req.body.email, password: req.body.password, username: req.body.username}, (error, data)=>{
+                                if(error){
                                     return res
-                                        .status(400)
-                                        .json(ERR('You already signed up, reset password if forgotten.'))
-                                }
-                                if(!data){
-                                    Owner.countDocuments({},(error, count) =>{
+                                        .status(500)
+                                        .json(ERR('Error occured while saving file'))
+                                };
+                                //if no error occured while trying to save file
+                                Token.create({_ownerId: data._id, token: crypto.randomBytes(16).toString('hex')}, (error, token)=>{
+                                    if(error){//if error occur while trying to send mail
+                                        return res
+                                            .status(500)
+                                            .json(ERR('Error in token creation'));
+                                    };
+                                    //send the email  if no error occur 
+                                    sgMail.setApiKey(mailKey);  
+                                    var mail = { from: 'no-reply@genkins.com',
+                                                        to: req.body.email,
+                                                        subject: 'Account Verification Token',
+                                                        //text: 'Hello' +' ' + req.body.username +',' + '\n\nPlease verify your admin account by clicking the link: \nhttp:\/\/' + req.headers.host + '\/confirmation\/' + Token.token + '.\n'
+                                                        text: token.token};
+                                    sgMail.send(mail, (error)=>{
                                         if(error){
                                             return res
-                                                .status(400)
-                                                .json(ERR('Error occured while trying to count'));
-                                        }else{
-                                            if(count === 6){
-                                                return res
-                                                    .status(400)
-                                                    .json(ERR('Maximum staff number reached, talk to the Director or CEO'))
-                                            }else{
-                                                if(count < 5){
-                                                    Owner.countDocuments({isAdmin: true}, (error, data)=>{
-                                                        if(error){
-                                                            console.log('Error occured while trying to count isAdmin');
-                                                            return res
-                                                                .status(400)
-                                                                .json(ERR('Error occured while trying to count isAdmin'));  
-                                                        }
-                                                        if(data === 1){
-                                                            Owner.create({email: req.body.email, password: req.body.password, username: req.body.username, isAdmin: false}, (error, data)=>{
-                                                                if(error){
-                                                                    return res
-                                                                       .status(500)
-                                                                       .json(ERR('Error occured while saving file'))
-                                                                };
-                                                                //if no error occured while trying to save file
-                                                                Token.create({_ownerId: data._id, token: crypto.randomBytes(16).toString('hex')}, (error, tokkenn)=>{
-                                                                   if(error){//if error occur while trying to send mail
-                                                                        return res
-                                                                           .status(500)
-                                                                           .json(ERR('Error in token creation'));
-                                                                   };
-                                                                    //send the email  if no error occur 
-                                                                    sgMail.setApiKey(mailKey);  
-                                                                           var mail = { from: 'no-reply@genkins.com',
-                                                                                        to: req.body.email,
-                                                                                        subject: 'Staff Account Verification Token',
-                                                                                        //text: 'Hello,\n\n' + 'Please verify your staff account by clicking the link: \nhttp:\/\/' + req.headers.host + '\/confirmation\/' + Token.token + '.\n'};
-                                                                                        text: tokkenn.token};
-                                                                    sgMail.send(mail, (error)=>{
-                                                                       if(error){
-                                                                           return res
-                                                                               .status(500)
-                                                                               .json(ERR('Mail sending failed'));
-                                                                       };
-                                                                       res
-                                                                       .status(200)
-                                                                       .json(SUCCESS('Staff verification mail has been sent successfully to ' + req.body.email + '.'))
-                                                                   })  
-                                                                })
-                                                            })
-                                                        } else{
-                                                            if(data < 1){
-                                                                Owner.create({email: req.body.email, password: req.body.password, username: req.body.username, isAdmin: true}, (error, data)=>{
-                                                                    if(error){
-                                                                        return res
-                                                                           .status(500)
-                                                                           .json(ERR('Error occured while saving file'))
-                                                                    };
-                                                                    //if no error occured while trying to save file
-                                                                    Token.create({_ownerId: data._id, token: crypto.randomBytes(16).toString('hex')}, (error, tokenn)=>{
-                                                                       if(error){//if error occur while trying to send mail
-                                                                            return res
-                                                                               .status(500)
-                                                                               .json(ERR('Error in token creation'));
-                                                                       };
-                                                                        //send the email  if no error occur 
-                                                                        sgMail.setApiKey(mailKey);  
-                                                                       var mail = { from: 'no-reply@genkins.com',
-                                                                                            to: req.body.email,
-                                                                                            subject: 'Administrator Account Verification Token',
-                                                                                            //text: 'Hello' +' ' + req.body.username +',' + '\n\nPlease verify your admin account by clicking the link: \nhttp:\/\/' + req.headers.host + '\/confirmation\/' + Token.token + '.\n'
-                                                                                            text: tokenn.token};
-                                                                       sgMail.send(mail, (error)=>{
-                                                                           if(error){
-                                                                               return res
-                                                                                   .status(500)
-                                                                                   .json(ERR('Mail sending failed'));
-                                                                           };
-                                                                           res
-                                                                           .status(200)
-                                                                           .json(SUCCESS('Staff verification mail has been sent successfully to ' + req.body.email + '.'))
-                                                                       })  
-                                                                    })
-                                                                })
-                                                            }
-                                                        }
-                                                    })
-                                                }
-                                            }
-                                        }
-                                    })
-                                }
-                            }
-                        })
+                                                .status(500)
+                                                .json(ERR('Mail sending failed'));
+                                        };
+                                        res
+                                        .status(200)
+                                        .json(SUCCESS('Verification mail has been sent successfully to ' + req.body.email + '.'))
+                                    })  
+                                })
+                            })
+                                                                                                   
+                        }
                     }
-                }
-            })    
+                                        
+               })         
         },
         verificationtoken:(req, res)=>{
             Token.findOne({token: req.body.token}, (error, token)=>{
@@ -161,7 +88,7 @@ var Owner = require('../model/owner').owner,
                 if(!token){
                     return res
                         .status(400)
-                        .json(ERR('Unable to find a valid token or Token expired. Try Signing up again'))
+                        .json(ERR('Unable to find a valid token or Token expired. Try requesting for a new token if you are sure you signed up'))
                 }
                 else{
                     if(token){
@@ -174,7 +101,7 @@ var Owner = require('../model/owner').owner,
                             if(!data){
                                 return res
                                     .status(400)
-                                    .json(ERR('No staff registered to this Verification token.'));
+                                    .json(ERR('Make sure your form is correctly filled, either your token or your email is wrong'));
                             }
                             if(data.isVerified){
                                 return res
@@ -182,6 +109,7 @@ var Owner = require('../model/owner').owner,
                                     .json(ERR('Staff has already been verified.'))
                             }
                             data.isVerified = true;//verify token if it hasn't
+                           //test to see if save callback is necessary
                             data.save((error)=>{
                                 if(error){
                                     return res
@@ -203,7 +131,7 @@ var Owner = require('../model/owner').owner,
                 if(error){
                     return res
                         .status(400)
-                        .json(ERR('Error occured while fetching user email'));
+                        .json(ERR('Error occured while fetching email'));
                 }
                 if(!data){
                     return res
@@ -231,7 +159,7 @@ var Owner = require('../model/owner').owner,
                         if(error){
                             return res
                                 .status(400)
-                                .json(ERR('Erro intoken creation'));
+                                .json(ERR('Error in token creation'));
                         };
                         sgMail.setApiKey(mailKey)
                         var mail = {from: 'no-reply@genkins.com',
@@ -242,7 +170,6 @@ var Owner = require('../model/owner').owner,
 
                         sgMail.send(mail, (error)=>{
                             if(error){
-                                console.log('there\'s a problem in mail sending');
                                 return res
                                     .status(500)
                                     .json(ERR('Mail sending failed'));
@@ -267,7 +194,7 @@ var Owner = require('../model/owner').owner,
                 if(!owner){
                     return res
                         .status(400)
-                        .json(ERR('This sign in parameter is not associated with any account. Check, re-type and try again.'))
+                        .json(ERR('This sign in parameter is not associated with any account. Check, re-type, and try again.'))
                 }
                 else{
                     if(owner && Object.keys(owner).length>0){
@@ -312,7 +239,7 @@ var Owner = require('../model/owner').owner,
                 }
             })
         },
-        passwordresettoken:(req, res)=>{
+        passwordresettoken: (req, res)=>{
             Owner.findOne({email: req.body.email}, (error, data)=>{
                 if(error){
                     return res
@@ -330,40 +257,41 @@ var Owner = require('../model/owner').owner,
                             return res
                                 .status(401)
                                 .json(ERR('Error encountered while searching for token'))
-                        }
+                        }         
                         if(e){
                             return res
                                 .status(401)
                                 .json(ERR('The last token you requested hasn\'t expired, check your email for it.'))
                         }
                         else{
-                             PasswordToken.create({_ownerId: data._id, passwordResetToken:crypto.randomBytes(16).toString('hex')}, (error, token)=>{
+                             PasswordToken.create({_ownerId: data._id, token:crypto.randomBytes(16).toString('hex')}, (error, tokken)=>{
                                      if(error){
                                           return res
                                               .status(401)
                                               .json(ERR('Token creation failed'));
-                                      }
-                        else{
-                        if(token){
-                            sgMail.setApiKey(mailKey);
-                            var mail = {
-                                from: 'Password-Reset@genkins.com',
-                                to: req.body.email,
-                                subject: 'Password Reset Token',
-                                //text: 'Hello, '+ data.username+ '\n\n' + 'You applied to change your password \n\n' +'Activate Password Reset authorization by clicking this link: \nhttp:\/\/' + req.headers.host + '\/confirmation\/' + PasswordToken.passwordResetToken + '.\n',
-                                text: tokken.token};
-                            sgMail.send(mail, (error)=>{
-                                if(error){
-                                   return res
-                                        .status(401)
-                                        .json(ERR('there\'s a problem in mail sending'));
-                                }
-                                res
-                                    .status(200)
-                                    .json(SUCCESS('Password reset mail has been sent successfully to ' + req.body.email + '.'));
-                                    })
-                                }
-                            }
+                                      };
+                                      if(tokken){
+                                        sgMail.setApiKey(mailKey);
+                                            let mail = {from: 'Password-Reset@genkins.com',
+                                                        to: req.body.email,
+                                                        subject: 'Password Reset Token',
+                                                        //text: 'Hello, '+ data.username+ '\n\n' + 'You applied to change your password \n\n' +'Activate Password Reset authorization by clicking this link: \nhttp:\/\/' + req.headers.host + '\/confirmation\/' + PasswordToken.passwordResetToken + '.\n',
+                                                        text: tokken.token};
+                                            sgMail.send(mail, (error)=>{
+                                                if(error){
+                                                    return res
+                                                        .status(401)
+                                                        .json(ERR('there\'s a problem in mail sending'));
+                                                }
+                                                    return res
+                                                    .status(200)
+                                                    .json(SUCCESS('Password reset mail has been sent successfully to ' + req.body.email + '.'));
+                                                    })
+                                                }else{
+                                                    return res
+                                                        .status(401)
+                                                        .json(ERR('No token created'))
+                                                };
                          })
                        }
                    })
@@ -371,7 +299,7 @@ var Owner = require('../model/owner').owner,
             })
         },
         resetpassword: (req, res)=>{
-            PasswordToken.findOne({passwordResetToken: req.body.PasswordToken}, (error, token)=>{
+            PasswordToken.findOne({passwordResetToken: req.body.passwordResetToken}, (error, token)=>{
                 if(error){
                     return res
                         .status(401)
@@ -449,7 +377,7 @@ var Owner = require('../model/owner').owner,
                                 .json("Error encountered while fetching staff's Identity");
                       }
                       if(staff){
-                            Product.create({name: req.body.name, desc: req.body.desc, images: urls, price: req.body.price, fashioncat: req.body.fashion, uploadedby: staff.username}, (err, product)=>{
+                            Product.create({name: req.body.name, desc: req.body.desc, images: urls, price: req.body.price, category: req.body.category, uploadedby: staff.username, store: req.body.store}, (err, product)=>{
                                 if(err){
                                     return res
                                         .status(400)
@@ -467,7 +395,7 @@ var Owner = require('../model/owner').owner,
                                     }
                                     return res
                                         .status(200)
-                                        .json(SUCCESS('urls =' + product.images))//+payload.username
+                                        .json(SUCCESS(product))//+payload.username
                                 }
                             })
                       }

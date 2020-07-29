@@ -11,6 +11,7 @@ Controller for user--
 var User = require('../model/user').user,
     Token = require('../model/user').userverificationtoken,
     PasswordToken = require('../model/user').userpasswordresettoken,
+    Products = require('../model/product').product,
     ERR = require('../commons/errorResponse'),
     SUCCESS = require('../commons/successResponse'),
     sgMail = require('@sendgrid/mail'),
@@ -84,7 +85,7 @@ var User = require('../model/user').user,
             })
         },
         /** 
-        after signup, the confrimation link takes user (after clicking on it) to a token confrimation form
+        after signup, the confirmation link takes user (after clicking on it) to a token confirmation form
         where the user would be asked to provide their email again.
         the token would be embedded in the form as a hidden input 
         **/
@@ -275,33 +276,35 @@ var User = require('../model/user').user,
                                 .json(ERR('The last token you requested hasn\'t expired, check your email for it.'))
                         }
                         else{
-                            PasswordToken.create({_userId: data._id, passwordResetToken: crypto.randomBytes(16).toString('hex')}, (error, tokken)=>{
-                                    if(error){
-                                        return res
-                                            .status(401)
-                                            .json(ERR('TOken creation failed'))
-                        }
-                        else{
-                        if(token){
-                            sgMail.setApiKey(mailKey);  
-                            var mail = {
-                                 from: 'Password-Reset@genkins.com',
-                                 to: req.body.email,
-                                 subject: 'Password Reset Token',
-                                 //text: 'Hello, '+ data.fullname+ '\n\n' + 'You applied to change your password \n\n' +'Activate Password Reset authorization by clicking this link: \nhttp:\/\/' + req.headers.host + '\/confirmation\/' + PasswordToken.passwordResetToken + '.\n'};
-                                 text: tokken.token};
-                            sgMail.send(mail, (error)=>{
+                            PasswordToken.create({_userId: data._id, token: crypto.randomBytes(16).toString('hex')}, (error, tokken)=>{
                                 if(error){
                                     return res
                                         .status(401)
-                                        .json(ERR('Mail sending failed'));
+                                        .json(ERR('Token creation failed'))
                                 }
-                                res
-                                     .status(200)
-                                     .json(SUCCESS('Password reset mail has been sent successfully to ' + req.body.email + '.'))
-                                })
-                            }
-                        }
+                                if(tokken){
+                                    sgMail.setApiKey(mailKey);  
+                                    var mail = {
+                                        from: 'Password-Reset@genkins.com',
+                                        to: req.body.email,
+                                        subject: 'Password Reset Token',
+                                        //text: 'Hello, '+ data.fullname+ '\n\n' + 'You applied to change your password \n\n' +'Activate Password Reset authorization by clicking this link: \nhttp:\/\/' + req.headers.host + '\/confirmation\/' + PasswordToken.passwordResetToken + '.\n'};
+                                        text: tokken.token};
+                                    sgMail.send(mail, (error)=>{
+                                        if(error){
+                                            return res
+                                                .status(401)
+                                                .json(ERR('Mail sending failed'));
+                                        }
+                                            return res
+                                            .status(200)
+                                            .json(SUCCESS('Password reset mail has been sent successfully to ' + req.body.email + '.'))
+                                        })
+                                    }else{
+                                        return res
+                                            .status(401)
+                                            .json(ERR('No token created'))
+                                    };
                     })
                 }
             })
@@ -365,6 +368,68 @@ var User = require('../model/user').user,
                     }
                 }
             })
+        },
+        //--------------------------------------GET ALL PRODUCTS-----------------------------------------
+        //--------------------------------------                -----------------------------------------
+        productcart:(req, res)=>{
+        //endpoint is solely for research purpose
+            filter = {
+                price: {
+                    $gt: 10
+                }
+            };
+            aggregate = [
+                {$match: 
+                    filter
+                },
+                {$group: 
+                    {
+                        _id: '$name',
+                        count: { $sum: 1 }
+                    }
+                }
+            ];
+            Products.aggregate(aggregate, (err, data)=>{
+                if(err){
+                    return res.status(400).json(ERR('No data'))
+                }
+                return res.status(200).json(SUCCESS(data));
+            })
+        }
+        ,
+        getAllproduct: (req, res)=>{
+            Products.find({}, (error, pdata)=>{
+                if(error){
+                    return res
+                        .status(404)
+                        .json(ERR('Error encountered while fetching all products'));
+                }
+                if(!pdata){
+                    return res 
+                        .status(403)
+                        .json(ERR('There are no products in the database'))
+                }
+                return res
+                    .status(200)
+                    .json(SUCCESS(pdata))
+            }).sort({'uploadDate':-1})
+    },
+        getproductsbyId: (req, res)=>{
+                Products.findOne({_id: req.params.id}, (error, data)=>{
+                    if(error){
+                        return res
+                            .status(401)
+                            .json(ERR('Error encountered while fetching product'));
+                    }
+                    if(!data){
+                        return res 
+                            .status(402)
+                            .json(ERR('product does not exist'))
+                    }
+                    return res
+                        .status(200)
+                        .json(SUCCESS(data))
+                })
         },
 
     }

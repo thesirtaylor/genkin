@@ -35,10 +35,12 @@ module.exports = function(app){
     /* Store Routes */
     router.post('/store/create',verify, store.create);
     router.post('/store/genHirekey',verify, store.hireKey);
-    router.post('/store/join', verify, store.joinstore)
+    router.post('/store/join', verify, store.joinstore);
+    router.post('/store/removeproduct', verify, store.removeproduct);
+    router.post('/store/removeworker', verify, store.removeworker);
+    router.post('/store/upload', verify, upload.array('images', 4), store.uploadproduct);
 
     /*Sign in required*/
-    router.post('/owner/up', verify,upload.array('images', 4), owner.uploadproduct);
-    router.delete('/owner/ds', verify, owner.deleteworker)
+//    router.post('/owner/up', verify,upload.array('images', 4), owner.uploadproduct);
     app.use(router);
 }

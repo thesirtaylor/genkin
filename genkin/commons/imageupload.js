@@ -39,7 +39,7 @@ let filefilter = (req, file, callback)=>{
 
 let storage = multer.diskStorage({
   destination: function (req, file,callback){
-    callback(null, '')
+    callback(null, './public/images')
   },
   filename: function(req, file, callback){
     const date = new Date();

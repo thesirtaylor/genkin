@@ -31,7 +31,7 @@ module.exports = function(app){
     //and other weird HTTP request verbs we use this one
     app.use(allowCrossDomain);//allow cross domain access
 
-    app.use('/public',express.static(path.join(__dirname,'./public')));
+    app.use('/public',express.static(path.join(__dirname,'/images')));
     //if('development' === app.get('env') or use process.env.NODE_ENV === 'development'){
       //  app.use(errorHandler());
     //}

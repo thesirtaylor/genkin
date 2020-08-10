@@ -78,7 +78,19 @@ userModelSchema.methods.comparePassword = function(userpassword, callback){
 //create a method that splits user full name to return only firstname
 userModelSchema.methods.splitNames = function(){
     return this.fullname.split(" ")[0];
-}
+};
+
+var CartModelSchema = new Schema({
+    _userId: {type: Schema.Types.ObjectId, required:true, ref: 'user'},
+    items: [{
+            product:{type: Schema.Types.ObjectId, required:true, ref: 'product'},
+            qty:{type: Number, required: true}
+        }],
+})
+
+var cart = mongoose.model('cart', CartModelSchema);
+//export model module
+
 
 var user = mongoose.model('user', userModelSchema);
 var userverificationtoken = mongoose.model('userverificationtoken', tokenModelSchema);
@@ -87,3 +99,4 @@ var userpasswordresettoken = mongoose.model('userpasswordresettoken', passwordRe
 module.exports.user = user;
 module.exports.userverificationtoken = userverificationtoken;
 module.exports.userpasswordresettoken = userpasswordresettoken;
+module.exports.cart = cart;

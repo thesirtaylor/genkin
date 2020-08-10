@@ -20,8 +20,7 @@ var Owner = require('../model/owner').owner,
     fs = require('fs'),
     crypto = require('crypto'),
     jwt = require('jsonwebtoken'),
-    jwtsecret = require('../commons/jwtconfig').secret
-    var jwtchecktoken = require('../commons/jwt').checkToken;
+    jwtsecret = process.env.JWTSECRET;
     var mailKey = process.env.SGMAIL_APIKEY;
 
     module.exports = {

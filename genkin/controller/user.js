@@ -19,8 +19,7 @@ var User = require('../model/user').user,
     SALT_WORK_FACTOR = 10,
     crypto = require('crypto'),
     jwt = require('jsonwebtoken'),
-    jwtsecret = require('../commons/jwtconfig').secret
-    var jwtchecktoken = require('../commons/jwt').checkToken;
+    jwtsecret = process.env.JWTSECRET;
     var mailKey = process.env.SGMAIL_APIKEY;
 
 
@@ -96,11 +95,6 @@ var User = require('../model/user').user,
                         .status(400)
                         .json(ERR('Error encountered while looking for token'));
                 }
-                if(!token){
-                    return res
-                        .status(400)
-                        .json(ERR('Unable to find a valid token or Token expired. Try Signing up again'));
-                }else{
                     if(token){//if we found token
                         User.findOne({_id: token._userId, email: req.body.email}, (error, data)=>{
                              if(error){
@@ -132,8 +126,12 @@ var User = require('../model/user').user,
                              })
                         })
                         token.remove();
+                    }else{
+                        return res
+                            .status(400)
+                            .json(ERR('Unable to find a valid token or Token expired. Try Signing up again'));
                     }
-                }
+                
             })
         },
         //provided a user's token expires and we need to resend it

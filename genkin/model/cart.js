@@ -5,8 +5,8 @@ var mongoose = require('mongoose'),
 var CartModelSchema = new Schema({
     _userId: {type: Schema.Types.ObjectId, required:true, ref: 'user'},
     items: [{
-            product:{type: Schema.Types.ObjectId, required:true, ref: 'product'},
-            qty:{type: Number, required: true}
+            _id:{type: Schema.Types.ObjectId, required:true, ref: 'product', unique: true},
+            qty:{type: Number, required: true},
         }],
     address: {type: String, required: true}
 })

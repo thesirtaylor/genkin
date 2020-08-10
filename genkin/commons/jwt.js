@@ -1,7 +1,7 @@
 var  jwt = require('jsonwebtoken'),
-     jwtsecret = require('./jwtconfig').secret
+     jwtsecret = process.env.JWTSECRET,
      ERR = require('./errorResponse'),
-     SUCCESS = require('./successResponse'),
+     SUCCESS = require('./successResponse');
 //middle-ware to check if user is signed in, simply verifies the token signed at signin
  module.exports = {
      checkToken: (req, res, next)=>{

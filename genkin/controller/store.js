@@ -197,6 +197,9 @@ var Owner = require('../model/owner').owner,
             })
         },
         uploadproduct: async(req, res, next)=>{
+            //make upload async, prevent upload if file already exist
+            //check with file name and price
+
             let payload = req.decoded;
             const files = req.files;
             try {
@@ -211,7 +214,7 @@ var Owner = require('../model/owner').owner,
                 fs.unlinkSync(path);
                 }
                 if(urls){
-                    Owner.findOne({_id: payload.owner}, (error, staff)=>{
+                    Owner.findOne({_id: payload.owner}, (error, staff)=>{   
                         if(error){
                             return res
                                 .status(400)
@@ -236,6 +239,7 @@ var Owner = require('../model/owner').owner,
                                                     store: store._id},
                                                     (error, product)=>{
                                         if(error){
+                            console.log(error);
                                             return res
                                                 .status(400)
                                                 .json(ERR('Problems experienced while trying to create product'));

@@ -6,6 +6,7 @@ var express = require('express'),
     owner = require('../controller/owner'),
     store = require('../controller/store'),
     cart = require('../controller/cart'),
+    addtocart = require('../controller/addtocart')
     verify = require('../commons/jwt').checkToken
 
 
@@ -45,6 +46,7 @@ module.exports = function(app){
     router.post('/addtocart', verify, cart.addtocart);
     router.post('/removefromcart', verify, cart.removefromcart);
     router.put('/changeQty', verify, cart.changeQty);
+    router.get('/priceperstore', verify, cart.cartPricebystore)
     /*Sign in required*/
 //    router.post('/owner/up', verify,upload.array('images', 4), owner.uploadproduct);
     app.use(router);

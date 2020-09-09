@@ -42,9 +42,7 @@ let storage = multer.diskStorage({
     callback(null, './public/images')
   },
   filename: function(req, file, callback){
-    const date = new Date();
-    const conDate = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}[${date.getHours()}:${date.getMinutes()}]`
-    callback(null, file.originalname + '-' + conDate.toString());
+    callback(null, file.originalname);
   }
 });
 

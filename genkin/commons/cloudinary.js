@@ -11,7 +11,7 @@ function upload(file){
 
     return new Q.Promise((resolve, reject)=>{
         //edit width and height in production
-        cloudinary.v2.uploader.upload(file,{width: 200, height:200},(err, res)=>{
+        cloudinary.v2.uploader.upload(file,{ folder  : "genkin/productImages/" },(err, res)=>{
             if(err){
                 console.log('cloudinary err:', err)
                 reject(err);

@@ -12,9 +12,8 @@
     "url": "git+https://github.com/github.com/the_sir_taylor.git"
   },
   "keywords": [
-    "shopping",
-    "delivery",
-    "product"
+    "fashion",
+    "shopping"
   ],
   "author": "oo ajayi",
   "license": "ISC",
@@ -43,7 +42,6 @@
     "q": "^1.5.1"
   },
   "devDependencies": {
-    "nodemon": "^2.0.2",
-    "prettier": "^2.1.1"
+    "nodemon": "^2.0.2"
   }
 }

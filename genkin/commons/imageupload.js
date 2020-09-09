@@ -3,8 +3,8 @@ const multer = require('multer');
 const multerS3 = require('multer-s3');
 const aws = require('aws-sdk');
    const S3_BUCKET = "genkin-storage",
-          AWS_ACCESS_KEY_ID = "AKIAJKBOLSB2MGY3Z73Q",
-          AWS_SECRET_ACCESS_KEY = "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",
+          AWS_ACCESS_KEY_ID = "******************************",
+          AWS_SECRET_ACCESS_KEY = "********************************",
           REGION = "us-east-2",
           s3 = new aws.S3();
     

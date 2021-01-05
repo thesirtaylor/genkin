@@ -78,6 +78,7 @@ module.exports = {
                       console.log("thers a problem in mail sending");
                       return res.status(500).json(ERR("Mail sending failed"));
                     }
+                    
                     res
                       .status(200)
                       .json(
@@ -438,6 +439,7 @@ module.exports = {
           name: 1,
           //"workers[0]": 1,
           inventory_docs: { name: 1, price: 1, category: 1, images: 1 },
+          // "inventory_docs.price": 1
         },
       },
     ];

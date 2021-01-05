@@ -1,3 +1,4 @@
+
 var express = require('express'),
     router = express.Router(),
     read = require('../controller/read'),
@@ -6,8 +7,9 @@ var express = require('express'),
     owner = require('../controller/owner'),
     store = require('../controller/store'),
     cart = require('../controller/cart'),
-    addtocart = require('../controller/addtocart')
-    verify = require('../commons/jwt').checkToken
+    addtocart = require('../controller/addtocart'),
+    verify = require('../commons/jwt').checkToken,
+    uploadproduct = require('../controller/uploadproduct');
 
 
 module.exports = function(app){
@@ -40,14 +42,14 @@ module.exports = function(app){
     router.post('/store/join', verify, store.joinstore);
     router.post('/store/removeproduct', verify, store.removeproduct);
     router.post('/store/removeworker', verify, store.removeworker);
-    router.post('/store/upload', verify, upload.array('images', 4), store.uploadproduct);
+    router.post('/store/upload', verify, upload.array('images', 4), uploadproduct.upload);
 
     /* Cart Routes */
     router.post('/addtocart', verify, cart.addtocart);
     router.post('/removefromcart', verify, cart.removefromcart);
     router.put('/changeQty', verify, cart.changeQty);
-    router.get('/priceperstore', verify, cart.cartPricebystore)
-    /*Sign in required*/
-//    router.post('/owner/up', verify,upload.array('images', 4), owner.uploadproduct);
+    router.get('/priceperstore', verify, cart.cartPricebystore);
+
+
     app.use(router);
 }

@@ -248,6 +248,7 @@ module.exports = {
                     totalCartperStore: {
                       $sum: { $multiply: ["$items.price", "$items.qty"] },
                     },
+                    data: { $push: "$$ROOT" },
                   },
                 },
               ],

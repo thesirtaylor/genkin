@@ -1,4 +1,5 @@
 const multer = require('multer');
+const { resolve } = require('q');
 /*
 const multerS3 = require('multer-s3');
 const aws = require('aws-sdk');
@@ -30,26 +31,28 @@ const upload = multer({
 });
 */
 let filefilter = (req, file, callback)=>{
-  if(file.mimetype === 'image/jpeg' || file.mimetype === 'image/jpg' || file.mimetype === 'image/png'){
-    callback(null, true)
-  } else{
-    callback({message: 'Unsupported file format'}, false)
+  if (file.originalname.match(/\.(jpg|jpeg|png)$/)) {
+    return callback(null, true);
+  } else {
+    console.log(`bad format`);
+    return callback({ success: false, message: "BAD REQUEST" }, false
+    );
   }
 };
 
 let storage = multer.diskStorage({
   destination: function (req, file,callback){
-    callback(null, './public/images')
+    return callback(null, './public/images')
   },
   filename: function(req, file, callback){
-    callback(null, file.originalname);
+    return callback(null, file.originalname);
   }
 });
 
 
 let upload = multer({
   storage: storage,
-  limits: {fileSize: 1024 * 1024 * 8},
-  filefilter: filefilter
+  limits: {fileSize: 1024 * 1024 * 24},
+  fileFilter: filefilter
 });
  module.exports = upload;

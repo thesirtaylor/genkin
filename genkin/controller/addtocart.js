@@ -19,8 +19,7 @@ module.exports = {
         User.findOne({ _id: payload.user }),
         Product.findOne({ name: req.body.name }),
       ];
-
-      const [user, product] = await Promise.all(allPromises);
+      const [user, product] = await Promise.all(allPromises);   
 
       const cart = await Cart.findOne({
         "items._id": product._id,

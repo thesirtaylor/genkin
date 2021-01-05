@@ -1,26 +1,22 @@
-const cloudinary = require('cloudinary'),
-      Q = require('q');
+const cloudinary = require("cloudinary");
 
-function upload(file){
-    //use env variables
+module.exports = {
+  upload: (file, folderPath)=>{
     cloudinary.config({
-        cloud_name: "genkin",
-        api_key: "148658642175944",
-        api_secret: "VoWUmPD_qVHecuxCsC_POQ-sGyw"
+      cloud_name: "genkin",
+      api_key: process.env.CLOUDINARYKEY,
+      api_secret: process.env.CLOUDINARYSECRET,
     });
-
-    return new Q.Promise((resolve, reject)=>{
-        //edit width and height in production
-        cloudinary.v2.uploader.upload(file,{ folder  : "genkin/productImages/" },(err, res)=>{
-            if(err){
-                console.log('cloudinary err:', err)
-                reject(err);
-            } else{
-                console.log('cloudinary res:', res)
-                return resolve(res.url);
-            }
-        });
+    return new Promise(async (resolve, reject) => {
+      try {
+             let cloud = await cloudinary.v2.uploader.upload(file, { folder: folderPath });
+             if (cloud) {
+                return resolve (cloud);
+             }else {return res.status(400).send({success:false, message:'BAD REQUEST'})}
+      } catch (error) {
+        console.log(error)
+        return reject(error)
+      }
     });
-};
-
-module.exports = upload;
+  }
+}
